@@ -137,8 +137,10 @@ class DelayQueue(threading.Thread):
                 time.sleep(times[1] - t_delta)
             # finally process one
             try:
-                func, args, kwargs = item
-                func(*args, **kwargs)
+                promise, args, kwargs = item
+                promise(*args, **kwargs)
+                if promise.exception is not None:
+                    self.exc_route(promise.exception)
             except Exception as exc:  # re-route any exceptions
                 self.exc_route(exc)  # to prevent thread exit
 
@@ -290,6 +292,10 @@ class MessageQueue:
             self._group_delayq(self._all_delayq, promise)
         return promise
 
+    def update_exc_route(self, error_cb):
+        self.exc_route = error_cb
+        self._all_delayq.exc_route = error_cb
+        self._group_delayq.exc_route = error_cb
 
 def queuedmessage(method: Callable) -> Callable:
     """A decorator to be used with :attr:`telegram.Bot` send* methods.

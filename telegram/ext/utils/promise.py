@@ -24,6 +24,7 @@ from typing import Callable, List, Optional, Tuple, TypeVar, Union
 
 from telegram.utils.deprecate import set_new_attribute_deprecated
 from telegram.utils.types import JSONDict
+from telegram.files.inputfile import InputFile
 
 RT = TypeVar('RT')
 
@@ -78,8 +79,19 @@ class Promise:
         error_handling: bool = True,
     ):
         self.pooled_function = pooled_function
-        self.args = args
+        new_args = []
+        for arg in args:
+            if InputFile.is_file(arg):
+                new_args.append(InputFile(arg))
+            else:
+                new_args.append(arg)
+        self.args = tuple(new_args)
+
         self.kwargs = kwargs
+        for key, value in self.kwargs.items():
+            if InputFile.is_file(value):
+                self.kwargs[key] = InputFile(value)
+
         self.update = update
         self.error_handling = error_handling
         self.done = Event()

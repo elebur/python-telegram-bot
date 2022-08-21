@@ -90,7 +90,8 @@ class Promise:
         self.kwargs = kwargs
         for key, value in self.kwargs.items():
             if InputFile.is_file(value):
-                self.kwargs[key] = InputFile(value)
+                n = self.kwargs.get("filename", None)
+                self.kwargs[key] = InputFile(value, filename=n)
 
         self.update = update
         self.error_handling = error_handling
